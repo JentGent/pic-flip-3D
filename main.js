@@ -432,7 +432,7 @@ let time = Date.now() / 1000;
 let oldTime = time;
 function draw() {
     const realTime = Date.now() / 1000;
-    const newTime = Math.min(time + DT * MAX_SUBSTEPS, realTime);
+    time = Math.max(time, realTime - MAX_SUBSTEPS * DT);
     background(0, 0, 0);
     if (mousePressed) {
         view.theta -= (mouseX - pmouseX) * VIEW_SPEED;
@@ -459,7 +459,7 @@ function draw() {
     push();
     translate(width / 2, height / 2);
     scale(1, -1);
-    while (time < newTime) {
+    while (time < realTime) {
         sim.update(DT);
         time += DT;
     }
