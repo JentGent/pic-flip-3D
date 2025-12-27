@@ -372,11 +372,11 @@ Simulation.prototype.update = function(dt) {
             const cell1 = this.grid[idx1];
             if (cell1 && cell1.length) {
                 for (let xIdx = cellX; xIdx <= cellX + 1; xIdx++) {
-                    if (xIdx < 0 || xIdx >= this.width) continue;
+                    if (xIdx >= this.width) continue;
                     for (let yIdx = cellY; yIdx <= cellY + 1; yIdx++) {
-                        if (yIdx < 0 || yIdx >= this.height) continue;
+                        if (yIdx >= this.height) continue;
                         for (let zIdx = cellZ; zIdx <= cellZ + 1; zIdx++) {
-                            if (zIdx < 0 || zIdx >= this.depth) continue;
+                            if (zIdx >= this.depth) continue;
                             const idx2 = this.idx(xIdx, yIdx, zIdx);
                             const cell2 = this.grid[idx2];
                             if (!cell2 || !cell2.length) continue;
