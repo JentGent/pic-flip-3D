@@ -365,46 +365,59 @@ Simulation.prototype.update = function(dt) {
         p.update(dt);
         this.boxParticle(p);
     }
-    for (let i = 0; i < this.particles.length; i++) {
-        const p = this.particles[i];
-        const pi = (p.x / this.cellSize) | 0, pj = (p.y / this.cellSize) | 0, pk = (p.z / this.cellSize) | 0;
+    for (let it = 0; it < PARTICLE_COLLISION_ITERATIONS; it++) {
         let anyCollisions = false;
-        for (let it = 0; it < PARTICLE_COLLISION_ITERATIONS; it++) {
-            for (let xIdx = pi - 1; xIdx <= pi + 1; xIdx++) {
-                if (xIdx < 0 || xIdx >= this.width) continue;
-                for (let yIdx = pj - 1; yIdx <= pj + 1; yIdx++) {
-                    if (yIdx < 0 || yIdx >= this.height) continue;
-                    for (let zIdx = pk - 1; zIdx <= pk + 1; zIdx++) {
-                        if (zIdx < 0 || zIdx >= this.depth) continue;
-                        const idx = this.idx(xIdx, yIdx, zIdx);
-                        const nearParticles = this.grid[idx];
-                        if (!nearParticles) continue;
-                        for (let j = 0; j < nearParticles.length; j++) {
-                            const q = nearParticles[j];
-                            if (q === p) continue;
-                            const dx = (q.x - p.x) || Math.random() * 0.02 - 0.01,
-                                dy = (q.y - p.y) || Math.random() * 0.02 - 0.01,
-                                dz = (q.z - p.z) || Math.random() * 0.02 - 0.01;
-                            const sqDist = dx * dx + dy * dy + dz * dz;
-                            if (sqDist < PARTICLE_SIZE * PARTICLE_SIZE) {
-                                anyCollisions = true;
-                                const dist = Math.sqrt(sqDist);
-                                const overlap = (PARTICLE_SIZE - dist) / 8 / dist;
-                                p.x -= dx * overlap;
-                                p.y -= dy * overlap;
-                                p.z -= dz * overlap;
-                                q.x += dx * overlap;
-                                q.y += dy * overlap;
-                                q.z += dz * overlap;
-                                this.boxParticle(p);
-                                this.boxParticle(q);
+        let cellX = 0, cellY = 0, cellZ = 0;
+        for (let idx1 = 0; idx1 < this.grid.length; idx1++) {
+            const cell1 = this.grid[idx1];
+            if (cell1 && cell1.length) {
+                for (let xIdx = cellX; xIdx <= cellX + 1; xIdx++) {
+                    if (xIdx < 0 || xIdx >= this.width) continue;
+                    for (let yIdx = cellY; yIdx <= cellY + 1; yIdx++) {
+                        if (yIdx < 0 || yIdx >= this.height) continue;
+                        for (let zIdx = cellZ; zIdx <= cellZ + 1; zIdx++) {
+                            if (zIdx < 0 || zIdx >= this.depth) continue;
+                            const idx2 = this.idx(xIdx, yIdx, zIdx);
+                            const cell2 = this.grid[idx2];
+                            if (!cell2 || !cell2.length) continue;
+                            for (let i = 0; i < cell1.length; i++) {
+                                const p = cell1[i];
+                                for (let j = (cell1 === cell2 ? i + 1 : 0); j < cell2.length; j++) {
+                                    const q = cell2[j];
+                                    const dx = (q.x - p.x) || (Math.random() * 0.02 - 0.01),
+                                        dy = (q.y - p.y) || (Math.random() * 0.02 - 0.01),
+                                        dz = (q.z - p.z) || (Math.random() * 0.02 - 0.01);
+                                    const sqDist = dx * dx + dy * dy + dz * dz;
+                                    if (sqDist < PARTICLE_SIZE * PARTICLE_SIZE) {
+                                        anyCollisions = true;
+                                        const dist = Math.sqrt(sqDist);
+                                        const overlap = (PARTICLE_SIZE - dist) / 8 / dist;
+                                        p.x -= dx * overlap;
+                                        p.y -= dy * overlap;
+                                        p.z -= dz * overlap;
+                                        q.x += dx * overlap;
+                                        q.y += dy * overlap;
+                                        q.z += dz * overlap;
+                                        this.boxParticle(p);
+                                        this.boxParticle(q);
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-            if (!anyCollisions) break;
+            cellX++;
+            if (cellX >= this.width) {
+                cellX = 0;
+                cellY++;
+                if (cellY >= this.height) {
+                    cellY = 0;
+                    cellZ++;
+                }
+            }
         }
+        if (!anyCollisions) break;
     }
     this.particlesToGrid();
     this.eliminateDivergence(SOLVER_ITERATIONS);
