@@ -4,8 +4,10 @@ var canvas;
 mousePressed = false;
 function setup() {
     canvas = createCanvas(800, 800).canvas;
+    canvas.style.touchAction = "none";
     canvas.onmousedown = function(e) {
         mousePressed = true;
+        e.preventDefault();
     };
 }
 
